@@ -84,7 +84,7 @@ node test/smoke.mjs
 ```
 
 Runs offline against a fixture payload: link parsing, tree normalization,
-message filtering, markdown/math/code rendering, and a real PDF print.
+message filtering, markdown/math/code rendering, and a real PDF print...
 Output lands in `test-output/`.
 
 ## License
