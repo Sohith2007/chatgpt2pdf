@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ChatGPT chat → PDF</title>
+<style>
+  :root {
+    --bg: #f7f8fa; --panel: #ffffff; --ink: #14161a; --muted: #6b7280;
+    --rule: #e2e6ec; --accent: #10a37f; --accent-ink: #ffffff; --danger: #b42318;
+    --sans: "Segoe UI", Inter, -apple-system, system-ui, Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a; --panel: #1c1f25; --ink: #eceef2; --muted: #99a1ad;
+      --rule: #2c3138; --accent: #19c39a; --accent-ink: #06231c; --danger: #ff8a80;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 var(--sans); }
+  .wrap { max-width: 62rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+  header h1 { font-size: 1.6rem; margin: 0 0 .3rem; letter-spacing: -0.02em; }
+  header p { margin: 0 0 1.5rem; color: var(--muted); }
+
+  .card { background: var(--panel); border: 1px solid var(--rule); border-radius: 12px; padding: 1.1rem; }
+  .row { display: flex; gap: .6rem; flex-wrap: wrap; }
+  input[type=url] {
+    flex: 1 1 22rem; min-width: 0; padding: .7rem .85rem; font: inherit;
+    color: inherit; background: transparent;
+    border: 1px solid var(--rule); border-radius: 8px;
+  }
+  input[type=url]:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  button {
+    padding: .7rem 1.2rem; font: 600 inherit; border: 0; border-radius: 8px; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink);
+  }
+  button:disabled { opacity: .55; cursor: progress; }
+  button.ghost { background: transparent; color: inherit; border: 1px solid var(--rule); font-weight: 500; }
+
+  .opts { display: flex; flex-wrap: wrap; gap: .9rem 1.4rem; align-items: center; margin-top: .9rem;
+          padding-top: .9rem; border-top: 1px solid var(--rule); font-size: .88rem; color: var(--muted); }
+  .opts label { display: inline-flex; align-items: center; gap: .4rem; }
+  select { font: inherit; padding: .25rem .4rem; border-radius: 6px; border: 1px solid var(--rule);
+           background: transparent; color: inherit; }
+
+  #status { margin: 1rem 0 0; min-height: 1.4rem; font-size: .92rem; color: var(--muted); }
+  #status.err { color: var(--danger); white-space: pre-wrap; }
+  .done { display: none; align-items: center; gap: .75rem; flex-wrap: wrap; margin-top: 1rem; }
+  .done.on { display: flex; }
+  .meta { font-size: .85rem; color: var(--muted); }
+  iframe { display: none; width: 100%; height: 70vh; margin-top: 1.25rem; background: #fff;
+           border: 1px solid var(--rule); border-radius: 12px; }
+  iframe.on { display: block; }
+  footer { margin-top: 2rem; font-size: .82rem; color: var(--muted); }
+  code { font-family: Consolas, monospace; background: rgba(128,128,128,.14); padding: .05em .35em; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>ChatGPT chat → PDF</h1>
+    <p>Paste a public share link and get a clean, printable transcript.</p>
+  </header>
+
+  <form class="card" id="form">
+    <div class="row">
+      <input id="url" type="url" required placeholder="https://chatgpt.com/share/…" autocomplete="off" spellcheck="false">
+      <button id="go" type="submit">Convert</button>
+    </div>
+    <div class="opts">
+      <label>Theme
+        <select id="theme">
+          <option value="light">Light</option>
+          <option value="sepia">Sepia</option>
+          <option value="mono">Mono</option>
+        </select>
+      </label>
+      <label>Page
+        <select id="pageSize">
+          <option>A4</option><option>Letter</option><option>Legal</option>
+        </select>
+      </label>
+      <label><input id="timestamps" type="checkbox" checked> Timestamps</label>
+      <label><input id="reasoning" type="checkbox" checked> Reasoning summaries</label>
+      <label><input id="includeTools" type="checkbox"> Tool / code output</label>
+    </div>
+  </form>
+
+  <p id="status"></p>
+
+  <div class="done" id="done">
+    <button id="download">Download PDF</button>
+    <button class="ghost" id="toggle" type="button">Hide preview</button>
+    <span class="meta" id="meta"></span>
+  </div>
+
+  <iframe id="preview" title="Preview"></iframe>
+
+  <footer>
+    The chat must be shared publicly (<strong>Share → Create link</strong>). Private <code>/c/…</code> links
+    are only visible to your logged-in browser and cannot be fetched here.
+  </footer>
+</div>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const status = $('status');
+  let current = null;
+
+  const say = (msg, isError) => {
+    status.textContent = msg;
+    status.className = isError ? 'err' : '';
+  };
+
+  $('form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const url = $('url').value.trim();
+    if (!url) return;
+
+    $('go').disabled = true;
+    $('done').classList.remove('on');
+    $('preview').classList.remove('on');
+    say('Fetching the conversation… (the first run may take a few seconds while Chrome starts)');
+
+    try {
+      const res = await fetch('/api/convert', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          url,
+          theme: $('theme').value,
+          pageSize: $('pageSize').value,
+          timestamps: $('timestamps').checked,
+          reasoning: $('reasoning').checked,
+          includeTools: $('includeTools').checked,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+
+      current = data;
+      say('');
+      $('meta').textContent =
+        `${data.title} — ${data.messages} messages, ${(data.bytes / 1024).toFixed(0)} KB (via ${data.source})`;
+      $('done').classList.add('on');
+      $('preview').srcdoc = data.html;
+      $('preview').classList.add('on');
+      $('toggle').textContent = 'Hide preview';
+    } catch (err) {
+      say(err.message, true);
+    } finally {
+      $('go').disabled = false;
+    }
+  });
+
+  $('download').addEventListener('click', () => {
+    if (current) window.location.href = `/api/pdf/${current.id}`;
+  });
+
+  $('toggle').addEventListener('click', () => {
+    const on = $('preview').classList.toggle('on');
+    $('toggle').textContent = on ? 'Hide preview' : 'Show preview';
+  });
+</script>
+</body>
+</html>

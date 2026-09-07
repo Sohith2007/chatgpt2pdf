@@ -1,0 +1,37 @@
+{
+  "name": "chatgpt2pdf",
+  "version": "1.0.0",
+  "description": "Convert a shared ChatGPT conversation link into a clean, readable PDF.",
+  "license": "MIT",
+  "author": "Sohith Patha",
+  "type": "module",
+  "keywords": [
+    "chatgpt",
+    "pdf",
+    "export",
+    "transcript",
+    "share-link",
+    "puppeteer",
+    "markdown",
+    "cli"
+  ],
+  "bin": {
+    "chatgpt2pdf": "src/cli.js"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "convert": "node src/cli.js",
+    "test": "node test/smoke.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@sparticuz/chromium": "^149.0.0",
+    "express": "^4.19.2",
+    "highlight.js": "^11.12.0",
+    "katex": "^0.16.11",
+    "marked": "^12.0.2",
+    "puppeteer": "^24.43.1"
+  }
+}

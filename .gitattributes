@@ -1,0 +1,6 @@
+# Keep line endings stable between Windows checkouts and CI.
+* text=auto eol=lf
+
+*.png binary
+*.pdf binary
+*.ico binary
