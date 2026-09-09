@@ -6,7 +6,7 @@ import { writeFileSync, mkdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { payload } from './fixture.js';
 import { normalizePayload, parseShareId } from '../src/extract.js';
-import { renderDocument } from '../src/render.js';
+import { renderDocument, THEMES, resolveTheme } from '../src/render.js';
 import { htmlToPdf, closeBrowser } from '../src/pdf.js';
 
 const out = process.argv[2] || 'test-output';
@@ -56,12 +56,32 @@ check('escapes stray angle brackets', !html.includes('<Figure size'));
 const noTools = renderDocument(conv, { includeTools: false });
 check('--no-tools hides tool traffic', !noTools.includes('Figure size 640x480'));
 
+/* themes */
+check('theme list is exported', THEMES.includes('dark') && THEMES.includes('light'));
+check('unknown themes fall back to light', resolveTheme('neon') === 'light');
+check('light theme paints a white page', html.includes('--page:#ffffff'));
+
+const dark = renderDocument(conv, { theme: 'dark', pageSize: 'A4', timestamps: true, includeTools: true });
+writeFileSync(join(out, 'smoke-dark.html'), dark);
+check('dark theme paints a dark page', dark.includes('--page:#15171c'));
+check('dark theme lightens the body ink', dark.includes('--ink:#e6e9ef'));
+check('dark theme swaps the syntax palette', dark.includes('--hl-keyword:#ff7b72'));
+check('dark theme is tagged on <html>', dark.includes('data-theme="dark"'));
+check('dark theme declares a dark color-scheme', dark.includes('content="dark"'));
+check('dark theme keeps the print backgrounds', dark.includes('print-color-adjust: exact'));
+check('dark theme still renders the transcript', dark.includes('class="msg assistant"'));
+
 /* pdf */
 const pdfPath = join(out, 'smoke.pdf');
 await htmlToPdf(html, { path: pdfPath, pageSize: 'A4', title: conv.title });
-await closeBrowser();
 const size = statSync(pdfPath).size;
 check('writes a real PDF', size > 5000, `${(size / 1024).toFixed(0)} KB`);
+
+const darkPdfPath = join(out, 'smoke-dark.pdf');
+await htmlToPdf(dark, { path: darkPdfPath, pageSize: 'A4', title: conv.title, theme: 'dark' });
+await closeBrowser();
+const darkSize = statSync(darkPdfPath).size;
+check('writes a real dark PDF', darkSize > 5000, `${(darkSize / 1024).toFixed(0)} KB`);
 
 console.log(failures ? `\n${failures} check(s) failed` : `\nall checks passed -> ${out}/`);
 process.exit(failures ? 1 : 0);

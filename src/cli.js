@@ -4,11 +4,11 @@
 import { writeFileSync, readFileSync } from 'node:fs';
 import { basename, extname } from 'node:path';
 import { extractConversation, normalizePayload } from './extract.js';
-import { renderDocument } from './render.js';
+import { renderDocument, THEMES, DEFAULT_THEME } from './render.js';
 import { htmlToPdf, getBrowser, closeBrowser } from './pdf.js';
 
 const HELP = `
-chatgpt2pdf — turn a shared ChatGPT conversation into a readable PDF
+chatgpt2pdf \u2014 turn a shared ChatGPT conversation into a readable PDF
 
   usage: chatgpt2pdf <share-link> [options]
 
@@ -18,7 +18,8 @@ chatgpt2pdf — turn a shared ChatGPT conversation into a readable PDF
         --html-only      write only HTML, skip the PDF
         --json <file>    also dump the normalized conversation as JSON
         --from-json <f>  read a saved share payload instead of fetching
-        --theme <name>   light | sepia | mono          (default: light)
+        --theme <name>   light | sepia | mono | dark   (default: light)
+        --dark           shorthand for --theme dark
         --page <size>    A4 | Letter | Legal           (default: A4)
         --tools          include tool / code-interpreter traffic
         --no-reasoning   drop reasoning summaries
@@ -30,6 +31,7 @@ chatgpt2pdf — turn a shared ChatGPT conversation into a readable PDF
   examples:
     chatgpt2pdf https://chatgpt.com/share/68c1a0f4-...  -o chat.pdf
     chatgpt2pdf https://chatgpt.com/share/68c1a0f4-...  --theme sepia --tools
+    chatgpt2pdf https://chatgpt.com/share/68c1a0f4-...  --dark -o chat-dark.pdf
 `;
 
 const FLAGS = {
@@ -51,18 +53,23 @@ const VALUES = {
 };
 
 function parseArgs(argv) {
-  const opts = { theme: 'light', pageSize: 'A4' };
+  const opts = { theme: DEFAULT_THEME, pageSize: 'A4' };
   const rest = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '-h' || a === '--help') return { help: true };
-    if (FLAGS[a]) opts[FLAGS[a]] = true;
+    if (a === '--dark') opts.theme = 'dark';
+    else if (FLAGS[a]) opts[FLAGS[a]] = true;
     else if (VALUES[a]) {
       const v = argv[++i];
       if (v == null) throw new Error(`${a} needs a value`);
       opts[VALUES[a]] = v;
     } else if (a.startsWith('-')) throw new Error(`Unknown option: ${a}`);
     else rest.push(a);
+  }
+  opts.theme = String(opts.theme).toLowerCase();
+  if (!THEMES.includes(opts.theme)) {
+    throw new Error(`Unknown theme "${opts.theme}". Choose one of: ${THEMES.join(', ')}`);
   }
   opts.link = rest[0];
   return opts;
@@ -116,7 +123,7 @@ async function main() {
       getBrowser,
       onProgress: (m) => log(`  ${m}`),
     });
-    log(`got "${conv.title}" — ${conv.messages.length} messages (via ${conv.source})`);
+    log(`got "${conv.title}" \u2014 ${conv.messages.length} messages (via ${conv.source})`);
   }
 
   const html = renderDocument(conv, {
@@ -147,6 +154,7 @@ async function main() {
     pageSize: opts.pageSize,
     title: conv.title,
     footer: !opts.noFooter,
+    theme: opts.theme,
   });
   console.log(pdfPath);
 }

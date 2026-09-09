@@ -21,7 +21,7 @@ let browserPromise = null;
 
 async function launch() {
   const isVercel = process.env.VERCEL === '1' || process.env.AWS_LAMBDA_FUNCTION_VERSION || process.env.AWS_EXECUTION_ENV;
-  
+
   if (isVercel) {
     return await puppeteer.launch({
       args: chromium.args,
@@ -78,13 +78,13 @@ const escAttr = (s) =>
 
 /**
  * @param {string} html   complete HTML document
- * @param {object} opts   { path, pageSize, title, footer, timeout }
+ * @param {object} opts   { path, pageSize, title, footer, theme, timeout }
  * @returns {Promise<Buffer>}
  */
 export async function htmlToPdf(html, opts = {}) {
   // Long transcripts take real time to lay out, so the default budget is
   // generous compared with Chrome's own 30s.
-  const { path, pageSize = 'A4', title = '', footer = true, timeout = 300000 } = opts;
+  const { path, pageSize = 'A4', title = '', footer = true, theme = 'light', timeout = 300000 } = opts;
   const browser = await getBrowser();
   const page = await browser.newPage();
   try {
@@ -92,9 +92,12 @@ export async function htmlToPdf(html, opts = {}) {
     await page.setContent(html, { waitUntil: 'load', timeout });
     await page.emulateMediaType('print');
 
+    // The footer is drawn by Chrome in the page margin, over the document's own
+    // canvas colour, so a dark render needs a different grey to stay legible.
+    const footerInk = theme === 'dark' ? '#7f8794' : '#9099a8';
     const style =
       'font-family: -apple-system, "Segoe UI", system-ui, sans-serif; font-size: 7pt; ' +
-      'color: #9099a8; width: 100%; padding: 0 14mm; display: flex; justify-content: space-between;';
+      `color: ${footerInk}; width: 100%; padding: 0 14mm; display: flex; justify-content: space-between;`;
 
     return await page.pdf({
       path,

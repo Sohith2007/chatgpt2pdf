@@ -172,7 +172,7 @@ const fmtTime = (unix) => {
 
 function renderMessage(msg, index, opts) {
   const role = msg.role === 'user' ? 'user' : msg.isTool ? 'tool' : msg.role;
-  const label = msg.isTool && msg.name ? `Tool · ${esc(msg.name)}` : ROLE_LABELS[role] || esc(role);
+  const label = msg.isTool && msg.name ? `Tool \u00b7 ${esc(msg.name)}` : ROLE_LABELS[role] || esc(role);
   const stamp = opts.timestamps ? fmtTime(msg.createTime) : '';
   const body = msg.parts.map(renderPart).join('\n');
   return `<article class="msg ${esc(role)}" id="m${index}">
@@ -183,23 +183,61 @@ function renderMessage(msg, index, opts) {
 
 /* ---------------------------------------------------------------------- page */
 
+/** Themes the renderer knows about; `dark` prints light-on-dark. */
+export const THEMES = ['light', 'sepia', 'mono', 'dark'];
+export const DEFAULT_THEME = 'light';
+
+/* Syntax palettes. Light-background themes share one; dark gets its own so
+ * keywords and strings keep enough contrast against a near-black block. */
+const HL_LIGHT = {
+  comment: '#6a737d',
+  keyword: '#cf222e',
+  string: '#0a6640',
+  number: '#953800',
+  title: '#6639ba',
+  type: '#0550ae',
+  attr: '#0550ae',
+  deletion: '#82071e',
+};
+const HL_DARK = {
+  comment: '#8b949e',
+  keyword: '#ff7b72',
+  string: '#7ee787',
+  number: '#ffa657',
+  title: '#d2a8ff',
+  type: '#79c0ff',
+  attr: '#79c0ff',
+  deletion: '#ffa198',
+};
+
+const THEME_TOKENS = {
+  light: { page: '#ffffff', ink: '#16181d', muted: '#6b7280', rule: '#e3e6ec', userBg: '#f3f5f9', codeBg: '#f6f8fa', accent: '#10a37f', hl: HL_LIGHT },
+  sepia: { page: '#fbf7ef', ink: '#2a2622', muted: '#7a6f61', rule: '#e6dccb', userBg: '#f3ebdd', codeBg: '#f5eee1', accent: '#a2704a', hl: HL_LIGHT },
+  mono:  { page: '#ffffff', ink: '#000000', muted: '#555555', rule: '#d0d0d0', userBg: '#f2f2f2', codeBg: '#f4f4f4', accent: '#000000', hl: HL_LIGHT },
+  dark:  { page: '#15171c', ink: '#e6e9ef', muted: '#9aa3af', rule: '#2b313a', userBg: '#1e222a', codeBg: '#1a1e25', accent: '#19c39a', hl: HL_DARK },
+};
+
+/** Normalize whatever the caller passed into a known theme name. */
+export const resolveTheme = (name) => (THEMES.includes(name) ? name : DEFAULT_THEME);
+
 function styles(theme) {
-  const themes = {
-    light: { page: '#ffffff', ink: '#16181d', muted: '#6b7280', rule: '#e3e6ec', userBg: '#f3f5f9', codeBg: '#f6f8fa', accent: '#10a37f' },
-    sepia: { page: '#fbf7ef', ink: '#2a2622', muted: '#7a6f61', rule: '#e6dccb', userBg: '#f3ebdd', codeBg: '#f5eee1', accent: '#a2704a' },
-    mono:  { page: '#ffffff', ink: '#000000', muted: '#555555', rule: '#d0d0d0', userBg: '#f2f2f2', codeBg: '#f4f4f4', accent: '#000000' },
-  };
-  const t = themes[theme] || themes.light;
+  const t = THEME_TOKENS[resolveTheme(theme)];
+  const h = t.hl;
   return `
 ${KATEX_CSS}
 :root {
   --page:${t.page}; --ink:${t.ink}; --muted:${t.muted}; --rule:${t.rule};
   --user-bg:${t.userBg}; --code-bg:${t.codeBg}; --accent:${t.accent};
+  --hl-comment:${h.comment}; --hl-keyword:${h.keyword}; --hl-string:${h.string};
+  --hl-number:${h.number}; --hl-title:${h.title}; --hl-type:${h.type};
+  --hl-attr:${h.attr}; --hl-deletion:${h.deletion};
   --sans: "Segoe UI", Inter, -apple-system, system-ui, Roboto, Helvetica, Arial, sans-serif;
   --mono: "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
 * { box-sizing: border-box; }
-html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+/* A dark theme is only worth printing if Chrome keeps the backgrounds, and the
+ * page canvas has to inherit them so the paper margins are dark too. */
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: var(--page); }
 body {
   margin: 0; background: var(--page); color: var(--ink);
   font: 10.5pt/1.62 var(--sans);
@@ -273,16 +311,16 @@ img { max-width: 100%; height: auto; }
 .katex-display { margin: .6rem 0; overflow-x: auto; }
 
 /* hand-rolled highlight palette: readable in color and in grayscale print */
-.hljs-comment, .hljs-quote { color: #6a737d; font-style: italic; }
-.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag, .hljs-name { color: #cf222e; }
-.hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute, .hljs-meta .hljs-string { color: #0a6640; }
-.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-variable, .hljs-template-variable, .hljs-literal { color: #953800; }
-.hljs-title, .hljs-section, .hljs-title.function_ { color: #6639ba; }
-.hljs-type, .hljs-class .hljs-title, .hljs-built_in { color: #0550ae; }
-.hljs-attr, .hljs-property, .hljs-selector-attr, .hljs-selector-class { color: #0550ae; }
+.hljs-comment, .hljs-quote { color: var(--hl-comment); font-style: italic; }
+.hljs-keyword, .hljs-selector-tag, .hljs-literal, .hljs-doctag, .hljs-name { color: var(--hl-keyword); }
+.hljs-string, .hljs-regexp, .hljs-addition, .hljs-attribute, .hljs-meta .hljs-string { color: var(--hl-string); }
+.hljs-number, .hljs-symbol, .hljs-bullet, .hljs-variable, .hljs-template-variable, .hljs-literal { color: var(--hl-number); }
+.hljs-title, .hljs-section, .hljs-title.function_ { color: var(--hl-title); }
+.hljs-type, .hljs-class .hljs-title, .hljs-built_in { color: var(--hl-type); }
+.hljs-attr, .hljs-property, .hljs-selector-attr, .hljs-selector-class { color: var(--hl-attr); }
 .hljs-emphasis { font-style: italic; }
 .hljs-strong { font-weight: 700; }
-.hljs-deletion { color: #82071e; }
+.hljs-deletion { color: var(--hl-deletion); }
 
 @page { size: __PAGE_SIZE__; margin: 16mm 14mm 18mm; }
 @media print {
@@ -303,13 +341,14 @@ img { max-width: 100%; height: auto; }
  */
 export function renderDocument(conv, options = {}) {
   const opts = {
-    theme: 'light',
+    theme: DEFAULT_THEME,
     pageSize: 'A4',
     timestamps: true,
     includeTools: false,
     reasoning: true,
     ...options,
   };
+  const theme = resolveTheme(opts.theme);
   const shown = conv.messages
     .filter((m) => opts.includeTools || (!m.isTool && m.role !== 'tool'))
     .map((m) => (opts.reasoning ? m : { ...m, parts: m.parts.filter((p) => p.kind !== 'reasoning') }))
@@ -326,12 +365,13 @@ export function renderDocument(conv, options = {}) {
   const body = shown.map((m, i) => renderMessage(m, i, opts)).join('\n');
 
   return `<!doctype html>
-<html lang="en">
+<html lang="en" data-theme="${esc(theme)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="${theme === 'dark' ? 'dark' : 'light'}">
 <title>${esc(conv.title)}</title>
-<style>${styles(opts.theme).replace('__PAGE_SIZE__', esc(opts.pageSize))}</style>
+<style>${styles(theme).replace('__PAGE_SIZE__', esc(opts.pageSize))}</style>
 </head>
 <body>
 <main class="doc">
