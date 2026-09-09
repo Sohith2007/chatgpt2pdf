@@ -5,7 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { extractConversation } from './extract.js';
-import { renderDocument } from './render.js';
+import { renderDocument, resolveTheme } from './render.js';
 import { htmlToPdf, getBrowser, closeBrowser } from './pdf.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -39,7 +39,7 @@ app.post('/api/convert', async (req, res) => {
   try {
     const conv = await extractConversation(url, { getBrowser });
     const options = {
-      theme: ['light', 'sepia', 'mono'].includes(theme) ? theme : 'light',
+      theme: resolveTheme(theme),
       pageSize: ['A4', 'Letter', 'Legal'].includes(pageSize) ? pageSize : 'A4',
       includeTools: Boolean(includeTools),
       reasoning: reasoning !== false,
@@ -49,15 +49,18 @@ app.post('/api/convert', async (req, res) => {
     const pdf = await htmlToPdf(html, {
       pageSize: options.pageSize,
       title: conv.title,
+      theme: options.theme,
     });
 
     sweep();
     const id = randomUUID();
-    cache.set(id, { pdf: Buffer.from(pdf), name: `${slug(conv.title)}.pdf`, at: Date.now() });
+    const suffix = options.theme === 'dark' ? '-dark' : '';
+    cache.set(id, { pdf: Buffer.from(pdf), name: `${slug(conv.title)}${suffix}.pdf`, at: Date.now() });
 
     res.json({
       id,
       title: conv.title,
+      theme: options.theme,
       source: conv.source,
       messages: conv.messages.length,
       bytes: pdf.length,
