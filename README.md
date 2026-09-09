@@ -25,6 +25,7 @@ npm start           # http://localhost:5178  (PORT overrides)
 ```
 
 Paste a share link, pick options, preview the render in the page, download the PDF.
+The theme picker defaults to dark if your OS is in dark mode.
 
 ## Command line
 
@@ -38,7 +39,8 @@ node src/cli.js https://chatgpt.com/share/<id> -o chat.pdf
     --html-only      write only HTML, skip the PDF
     --json <file>    also dump the normalized conversation as JSON
     --from-json <f>  read a saved payload / data export instead of fetching
-    --theme <name>   light | sepia | mono          (default: light)
+    --theme <name>   light | sepia | mono | dark   (default: light)
+    --dark           shorthand for --theme dark
     --page <size>    A4 | Letter | Legal           (default: A4)
     --tools          include tool / code-interpreter traffic
     --no-reasoning   drop reasoning summaries
@@ -49,6 +51,25 @@ node src/cli.js https://chatgpt.com/share/<id> -o chat.pdf
 
 The link may be a full URL (`chatgpt.com/share/…`, `chat.openai.com/share/…`,
 `/share/e/…`) or a bare share id.
+
+## Themes
+
+| theme   | page       | notes |
+| ------- | ---------- | ----- |
+| `light` | white      | default |
+| `dark`  | near-black | light-on-dark, with a high-contrast syntax palette |
+| `sepia` | warm cream | easier on the eyes for long reads |
+| `mono`  | white      | black and white, for grayscale printers |
+
+```bash
+node src/cli.js https://chatgpt.com/share/<id> --dark -o chat-dark.pdf
+```
+
+Dark renders keep their background in the exported PDF (`print-color-adjust:
+exact`), including the paper margins and behind the page-number footer, so the
+file looks the same in every viewer. That also means a dark PDF is heavy on ink —
+use `mono` if the plan is to print it on paper. Unknown theme names are rejected
+by the CLI and fall back to `light` in the web app.
 
 ## How it reads a conversation
 
@@ -84,8 +105,8 @@ node test/smoke.mjs
 ```
 
 Runs offline against a fixture payload: link parsing, tree normalization,
-message filtering, markdown/math/code rendering, and a real PDF print...
-Output lands in `test-output/`.
+message filtering, markdown/math/code rendering, both the light and dark themes,
+and two real PDF prints. Output lands in `test-output/`.
 
 ## License
 

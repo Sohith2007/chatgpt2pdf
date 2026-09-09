@@ -48,7 +48,9 @@
   .done { display: none; align-items: center; gap: .75rem; flex-wrap: wrap; margin-top: 1rem; }
   .done.on { display: flex; }
   .meta { font-size: .85rem; color: var(--muted); }
-  iframe { display: none; width: 100%; height: 70vh; margin-top: 1.25rem; background: #fff;
+  /* The preview shows the printed page, so let the render's own theme supply
+     the backdrop instead of forcing white behind a dark PDF. */
+  iframe { display: none; width: 100%; height: 70vh; margin-top: 1.25rem; background: var(--panel);
            border: 1px solid var(--rule); border-radius: 12px; }
   iframe.on { display: block; }
   footer { margin-top: 2rem; font-size: .82rem; color: var(--muted); }
@@ -71,6 +73,7 @@
       <label>Theme
         <select id="theme">
           <option value="light">Light</option>
+          <option value="dark">Dark</option>
           <option value="sepia">Sepia</option>
           <option value="mono">Mono</option>
         </select>
@@ -112,6 +115,11 @@
     status.className = isError ? 'err' : '';
   };
 
+  // Default the picker to whatever the OS is already set to.
+  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    $('theme').value = 'dark';
+  }
+
   $('form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const url = $('url').value.trim();
@@ -141,7 +149,7 @@
       current = data;
       say('');
       $('meta').textContent =
-        `${data.title} — ${data.messages} messages, ${(data.bytes / 1024).toFixed(0)} KB (via ${data.source})`;
+        `${data.title} — ${data.messages} messages, ${(data.bytes / 1024).toFixed(0)} KB, ${data.theme} theme (via ${data.source})`;
       $('done').classList.add('on');
       $('preview').srcdoc = data.html;
       $('preview').classList.add('on');
