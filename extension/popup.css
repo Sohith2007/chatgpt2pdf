@@ -1,0 +1,263 @@
+/*
+ * ChatGPT2PDF Popup — "Paper & Ink" design (Claude Typography)
+ *
+ * Uses Claude's signature font pairings:
+ * - Copernicus / Tiempos / Source Serif for editorial headings & titles
+ * - Styrene B / system sans for controls, chips, and labels
+ * - Warm charcoal tones with burnt sienna accent
+ */
+
+:root {
+  --claude-serif: "Copernicus", "Tiempos Headline", "Tiempos Text", "Tiempos", "Source Serif 4", "Iowan Old Style", "Palatino Linotype", "Palatino", Georgia, serif;
+  --claude-sans: "Styrene B", "Styrene A", "Styrene", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --claude-mono: "Fira Code", "Cascadia Code", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  width: 320px;
+  background: #231f1d;
+  color: #e8ddd4;
+  font: 13px/1.5 var(--claude-sans);
+  overflow: hidden;
+}
+
+/* ── header ── */
+.header {
+  padding: 22px 22px 16px;
+  border-bottom: 1px solid rgba(255, 230, 210, 0.06);
+  position: relative;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 22px;
+  width: 40px;
+  height: 2px;
+  background: #c45d3e;
+  border-radius: 1px;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  margin-bottom: 8px;
+}
+.brand img {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  opacity: 0.9;
+}
+.brand h1 {
+  font: italic 700 17px/1.2 var(--claude-serif);
+  color: #e8ddd4;
+  letter-spacing: -0.02em;
+}
+.tagline {
+  font: italic 11.5px/1.45 var(--claude-serif);
+  color: #8a7e74;
+}
+
+/* ── sections ── */
+.section-label {
+  display: block;
+  font: normal 600 9px/1 var(--claude-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #7a6e64;
+  margin-bottom: 8px;
+}
+
+/* ── settings ── */
+.settings {
+  padding: 18px 22px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* segmented control */
+.seg-control {
+  display: flex;
+  gap: 0;
+  background: rgba(255, 230, 210, 0.04);
+  border: 1px solid rgba(255, 230, 210, 0.07);
+  border-radius: 8px;
+  padding: 3px;
+}
+.seg-control input[type="radio"] { display: none; }
+.seg-control label {
+  flex: 1;
+  text-align: center;
+  padding: 7px 2px;
+  font: normal 500 11px/1.2 var(--claude-sans);
+  color: #8a7e74;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.seg-control input[type="radio"]:checked + label {
+  background: #c45d3e;
+  color: #fce8df;
+  box-shadow: 0 1px 4px rgba(140, 50, 30, 0.25);
+  font-weight: 600;
+}
+.seg-control label:hover {
+  color: #c4b5a8;
+}
+
+/* chip group */
+.chip-group {
+  display: flex;
+  gap: 6px;
+}
+.chip-group input[type="radio"] { display: none; }
+.chip-group label {
+  padding: 6px 16px;
+  font: normal 500 11px/1.2 var(--claude-sans);
+  color: #8a7e74;
+  border: 1px solid rgba(255, 230, 210, 0.08);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.chip-group input[type="radio"]:checked + label {
+  border-color: #c45d3e;
+  color: #e8ddd4;
+  background: rgba(196, 93, 62, 0.12);
+}
+.chip-group label:hover {
+  border-color: rgba(255, 230, 210, 0.15);
+  color: #c4b5a8;
+}
+
+/* ── divider ── */
+.divider {
+  height: 0;
+  border: none;
+  border-top: 1px dashed rgba(255, 230, 210, 0.06);
+  margin: 2px 22px;
+}
+
+/* ── checkboxes ── */
+.checks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 22px 10px;
+}
+
+.check-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.check-item input { display: none; }
+.check-box {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid rgba(255, 230, 210, 0.15);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  background: transparent;
+}
+.check-item input:checked ~ .check-box {
+  background: #c45d3e;
+  border-color: #c45d3e;
+}
+.check-box svg {
+  width: 10px;
+  height: 10px;
+  stroke: #fce8df;
+  stroke-width: 2.5;
+  fill: none;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: opacity 0.15s, transform 0.15s;
+}
+.check-item input:checked ~ .check-box svg {
+  opacity: 1;
+  transform: scale(1);
+}
+.check-text {
+  font: normal 400 12px/1.3 var(--claude-sans);
+  color: #b5a89d;
+  transition: color 0.15s;
+}
+.check-item:hover .check-text {
+  color: #e0d5ca;
+}
+
+/* ── action ── */
+.action {
+  padding: 10px 22px 20px;
+}
+#export-btn {
+  width: 100%;
+  padding: 11px 16px;
+  font: italic 600 13.5px/1 var(--claude-serif);
+  color: #fce8df;
+  background: #c45d3e;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: transform 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+              box-shadow 0.2s ease,
+              background 0.15s ease;
+  box-shadow:
+    0 2px 8px rgba(140, 50, 30, 0.3),
+    inset 0 1px 0 rgba(255, 200, 170, 0.15);
+}
+#export-btn:hover {
+  transform: translateY(-1px);
+  background: #d4694a;
+  box-shadow:
+    0 4px 16px rgba(140, 50, 30, 0.35),
+    inset 0 1px 0 rgba(255, 200, 170, 0.2);
+}
+#export-btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+#export-btn:disabled {
+  opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none;
+}
+
+/* ── status ── */
+#status {
+  margin-top: 8px;
+  min-height: 16px;
+  font: italic 11px/1.4 var(--claude-serif);
+  text-align: center;
+  color: #8a7e74;
+  transition: color 0.2s;
+}
+#status.error { color: #d9826b; }
+#status.success { color: #7bb394; }
+
+/* ── footer ── */
+.footer {
+  padding: 10px 22px 14px;
+  border-top: 1px solid rgba(255, 230, 210, 0.06);
+  text-align: center;
+  font: normal 10px/1.4 var(--claude-sans);
+  color: #5e5550;
+}
+.footer a {
+  color: #c45d3e;
+  text-decoration: none;
+}
+.footer a:hover {
+  text-decoration: underline;
+}

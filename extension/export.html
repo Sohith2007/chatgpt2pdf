@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>ChatGPT2PDF — Export</title>
+  <link rel="stylesheet" href="lib/katex.min.css">
+  <link rel="stylesheet" href="lib/highlight.default.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&display=swap" rel="stylesheet">
+  <style id="theme-css"></style>
+</head>
+<body>
+
+  <!-- Floating Print & Theme Toolbar (hidden on print) -->
+  <header class="print-toolbar" id="toolbar">
+    <div class="toolbar-left">
+      <button id="print-btn" class="tb-btn-primary" title="Open print dialog or save as PDF">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+          <rect x="6" y="14" width="12" height="8" rx="1"/>
+        </svg>
+        <span>Print / Save as PDF</span>
+      </button>
+
+      <div class="tb-divider"></div>
+
+      <div class="theme-switcher" id="theme-switcher" role="radiogroup" aria-label="Theme selection">
+        <button class="theme-btn" data-theme="light" title="Light paper">Light</button>
+        <button class="theme-btn" data-theme="sepia" title="Warm parchment">Sepia</button>
+        <button class="theme-btn" data-theme="dark" title="Inky night">Dark</button>
+        <button class="theme-btn" data-theme="mono" title="High-contrast printer mono">Mono</button>
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <span class="info" id="info">Preparing document…</span>
+    </div>
+  </header>
+
+  <!-- Main Document Manuscript -->
+  <main class="doc" id="doc">
+    <div class="doc-loading">
+      <p>Typesetting conversation…</p>
+    </div>
+  </main>
+
+  <script src="lib/marked.min.js"></script>
+  <script src="lib/highlight.min.js"></script>
+  <script src="lib/katex.min.js"></script>
+  <script src="export.js"></script>
+</body>
+</html>

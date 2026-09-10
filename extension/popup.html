@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ChatGPT2PDF</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <img src="icons/icon48.png" alt="ChatGPT2PDF">
+      <h1>ChatGPT2PDF</h1>
+    </div>
+    <p class="tagline">Export any ChatGPT conversation to a beautifully formatted, print-ready PDF.</p>
+  </div>
+
+  <!-- Settings -->
+  <div class="settings">
+    <div>
+      <span class="section-label">Appearance</span>
+      <div class="seg-control" id="theme-seg">
+        <input type="radio" name="theme" value="light" id="theme-light" checked>
+        <label for="theme-light">Light</label>
+        <input type="radio" name="theme" value="dark" id="theme-dark">
+        <label for="theme-dark">Dark</label>
+        <input type="radio" name="theme" value="sepia" id="theme-sepia">
+        <label for="theme-sepia">Sepia</label>
+        <input type="radio" name="theme" value="mono" id="theme-mono">
+        <label for="theme-mono">Mono</label>
+      </div>
+    </div>
+
+    <div>
+      <span class="section-label">Paper</span>
+      <div class="chip-group" id="page-chips">
+        <input type="radio" name="pageSize" value="A4" id="page-a4" checked>
+        <label for="page-a4">A4</label>
+        <input type="radio" name="pageSize" value="Letter" id="page-letter">
+        <label for="page-letter">Letter</label>
+        <input type="radio" name="pageSize" value="Legal" id="page-legal">
+        <label for="page-legal">Legal</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Toggles / Checks -->
+  <div class="checks">
+    <label class="check-item" for="timestamps">
+      <input type="checkbox" id="timestamps" checked>
+      <div class="check-box">
+        <svg viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="check-text">Message timestamps</span>
+    </label>
+
+    <label class="check-item" for="reasoning">
+      <input type="checkbox" id="reasoning" checked>
+      <div class="check-box">
+        <svg viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="check-text">Reasoning summaries</span>
+    </label>
+
+    <label class="check-item" for="includeTools">
+      <input type="checkbox" id="includeTools">
+      <div class="check-box">
+        <svg viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="check-text">Tool / code output</span>
+    </label>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Action -->
+  <div class="action">
+    <button id="export-btn">Export Current Chat &rarr;</button>
+    <p id="status"></p>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    ChatGPT2PDF &middot; <a href="https://github.com/Sohith2007/chatgpt2pdf" target="_blank">GitHub</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
